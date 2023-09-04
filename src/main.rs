@@ -1,5 +1,6 @@
 use anyhow::Result;
 use clap::Parser;
+use regex::Regex;
 use std::{
     cmp::Ordering,
     env,
@@ -98,9 +99,10 @@ fn main() -> Result<()> {
             println!("{index}. {note}");
         }
 
-        let mut option = String::new();
         loop {
             print!("Select> ");
+
+            let mut option = String::new();
             io::stdout().flush()?;
             io::stdin().read_line(&mut option)?;
             let option = option.trim();
@@ -108,6 +110,24 @@ fn main() -> Result<()> {
 
             if option_lowercase == "q" || option_lowercase == "quit" {
                 break;
+            }
+
+            if let Some(regex) = option.strip_prefix('/') {
+                let regex = Regex::new(regex)?;
+                let matches: Vec<_> = notes
+                    .iter()
+                    .filter(|v| {
+                        regex.is_match(v.file_name().to_str().expect("Bad unicode in file name"))
+                    })
+                    .collect();
+                if matches.is_empty() {
+                    println!("No match for '{regex}'");
+                } else if matches.len() > 1 {
+                    println!("Multiple matches for '{regex}'");
+                } else {
+                    edit_file(matches[0].path())?;
+                    break;
+                }
             }
 
             if let Ok(number) = option.parse::<usize>() {
