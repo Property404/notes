@@ -40,7 +40,7 @@ fn edit_file(path: impl AsRef<OsStr>) -> Result<()> {
 }
 
 #[derive(Parser)]
-#[command(author, version, about, long_about = None)]
+#[command(author, about, long_about = None)]
 struct Cli {
     /// A note to view or edit
     note: Option<String>,
