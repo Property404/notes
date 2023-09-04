@@ -101,10 +101,29 @@ fn edit_note(note: &Note) -> Result<()> {
         let args = args.collect();
         (editor, args)
     });
+
+    let previously_existed = note.path.exists();
+
     Command::new(editor)
         .args(&**args)
         .arg(&note.path)
         .status()?;
+
+    if note.path.exists() {
+        Command::new("git").arg("add").arg(&note.path).output()?;
+        Command::new("git")
+            .args(["commit", "-m"])
+            .arg(format!(
+                "{}] {}",
+                if previously_existed {
+                    "edited"
+                } else {
+                    "created"
+                },
+                &note.name
+            ))
+            .output()?;
+    }
     Ok(())
 }
 
