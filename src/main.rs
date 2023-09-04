@@ -27,7 +27,9 @@ fn notes_dir() -> &'static Path {
 fn edit_file(path: impl AsRef<OsStr>) -> Result<()> {
     static EDITOR: OnceLock<(String, Vec<String>)> = OnceLock::new();
     let (editor, args) = &EDITOR.get_or_init(|| {
-        let args = env::var("EDITOR").expect("$EDITOR not set");
+        let args = env::var("EDITOR")
+            .or_else(|_err| env::var("VISUAL"))
+            .unwrap_or_else(|_err| String::from("vi"));
         let mut args = args.split_whitespace().map(String::from);
         let editor = args.next().expect("$EDITOR is blank");
         let args = args.collect();
