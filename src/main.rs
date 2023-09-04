@@ -17,8 +17,19 @@ fn notes_dir() -> &'static Path {
     static NOTES_DIR: OnceLock<PathBuf> = OnceLock::new();
     NOTES_DIR
         .get_or_init(|| {
-            let path = Path::new(&env::var("HOME").expect("$HOME not set")).join(".config/notes");
+            let path = Path::new(&env::var("HOME").expect("$HOME not set"))
+                .join(".local/share/dev.dagans.notes");
+            if !path.join(".git").exists() {
+                fs::create_dir_all(&path).expect("Could not create notes directory!");
+                env::set_current_dir(&path).expect("Failed to change directory");
+                Command::new("git")
+                    .arg("init")
+                    .status()
+                    .expect("Git initialization failed");
+            }
+            let path = path.join("notes");
             fs::create_dir_all(&path).expect("Could not create notes directory!");
+            env::set_current_dir(&path).expect("Failed to change directory");
             path
         })
         .as_ref()
