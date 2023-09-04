@@ -1,17 +1,72 @@
-use anyhow::Result;
+use anyhow::{anyhow, bail, Result};
 use clap::Parser;
 use regex::Regex;
 use std::{
     cmp::Ordering,
     env,
-    ffi::OsStr,
-    fs,
+    fs::{self, Metadata},
     io::{self, Write},
     os::unix::fs::MetadataExt,
     path::{Path, PathBuf},
     process::Command,
     sync::OnceLock,
 };
+use walkdir::{DirEntry, WalkDir};
+
+struct Note {
+    name: String,
+    path: PathBuf,
+}
+
+impl Note {
+    fn new(name: impl Into<String>) -> Note {
+        let name = name.into();
+        Note {
+            path: notes_dir().join(&name).with_extension("md"),
+            name,
+        }
+    }
+
+    fn from_path(path: PathBuf) -> Result<Note> {
+        let name = path
+            .file_name()
+            .ok_or_else(|| anyhow!("No file name in path!"))?
+            .to_str()
+            .ok_or_else(|| anyhow!("File name not valid UTF-8!"))?;
+        let Some(name) = name.strip_suffix(".md") else {
+            bail!("Uh, yikes, this doesn't look like a note file")
+        };
+        Ok(Note {
+            name: name.into(),
+            path,
+        })
+    }
+
+    fn metadata(&self) -> Result<Metadata> {
+        Ok(self.path.metadata()?)
+    }
+}
+
+fn all_notes() -> Result<Vec<Note>> {
+    let mut notes = Vec::new();
+    let matcher = |entry: &DirEntry| {
+        let file_name = entry.file_name().to_str();
+        let is_hidden = file_name.map(|s| s.starts_with('.')).unwrap_or(false);
+        !is_hidden
+    };
+
+    let walker = WalkDir::new(notes_dir()).into_iter();
+    for e in walker.filter_entry(matcher).filter_map(|e| e.ok()) {
+        let path = e.path();
+        if let Some(path_name) = path.to_str() {
+            if path_name.ends_with(".md") {
+                notes.push(Note::from_path(path.into())?)
+            }
+        }
+    }
+
+    Ok(notes)
+}
 
 fn notes_dir() -> &'static Path {
     static NOTES_DIR: OnceLock<PathBuf> = OnceLock::new();
@@ -35,7 +90,7 @@ fn notes_dir() -> &'static Path {
         .as_ref()
 }
 
-fn edit_file(path: impl AsRef<OsStr>) -> Result<()> {
+fn edit_note(note: &Note) -> Result<()> {
     static EDITOR: OnceLock<(String, Vec<String>)> = OnceLock::new();
     let (editor, args) = &EDITOR.get_or_init(|| {
         let args = env::var("EDITOR")
@@ -46,7 +101,10 @@ fn edit_file(path: impl AsRef<OsStr>) -> Result<()> {
         let args = args.collect();
         (editor, args)
     });
-    Command::new(editor).args(&**args).arg(&path).status()?;
+    Command::new(editor)
+        .args(&**args)
+        .arg(&note.path)
+        .status()?;
     Ok(())
 }
 
@@ -59,13 +117,12 @@ struct Cli {
 
 fn main() -> Result<()> {
     let cli = Cli::parse();
-    let notes_dir = notes_dir();
 
     if let Some(note) = &cli.note {
-        let note_path = notes_dir.join(note);
+        let note = Note::new(note);
 
-        if !note_path.exists() {
-            println!("Note '{note}' doesn't exist.");
+        if !note.path.exists() {
+            println!("Note '{}' doesn't exist.", &note.name);
             print!("Would you like to create it(y/n)?");
             io::stdout().flush()?;
 
@@ -85,10 +142,9 @@ fn main() -> Result<()> {
             }
         }
 
-        edit_file(&note_path)?;
+        edit_note(&note)?;
     } else {
-        let notes: io::Result<Vec<_>> = fs::read_dir(notes_dir)?.collect();
-        let mut notes = notes?;
+        let mut notes = all_notes()?;
 
         // Sort by access time
         notes.sort_unstable_by(|a, b| {
@@ -107,8 +163,7 @@ fn main() -> Result<()> {
         println!("Found the following:");
         println!("====================");
         for (index, note) in notes.iter().enumerate() {
-            let note = note.file_name();
-            let note = note.to_str().expect("Encountered bad unicode in file name");
+            let note = &note.name;
             println!("{index}. {note}");
         }
 
@@ -127,25 +182,20 @@ fn main() -> Result<()> {
 
             if let Some(regex) = option.strip_prefix('/') {
                 let regex = Regex::new(regex)?;
-                let matches: Vec<_> = notes
-                    .iter()
-                    .filter(|v| {
-                        regex.is_match(v.file_name().to_str().expect("Bad unicode in file name"))
-                    })
-                    .collect();
+                let matches: Vec<_> = notes.iter().filter(|v| regex.is_match(&v.name)).collect();
                 if matches.is_empty() {
                     println!("No match for '{regex}'");
                 } else if matches.len() > 1 {
                     println!("Multiple matches for '{regex}'");
                 } else {
-                    edit_file(matches[0].path())?;
+                    edit_note(matches[0])?;
                     break;
                 }
             }
 
             if let Ok(number) = option.parse::<usize>() {
                 if number < notes.len() {
-                    edit_file(notes[number].path())?;
+                    edit_note(&notes[number])?;
                     break;
                 }
             }
