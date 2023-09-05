@@ -132,6 +132,14 @@ fn edit_note(note: &Note) -> Result<()> {
 struct Cli {
     /// A note to view or edit
     note: Option<String>,
+
+    /// Run git command
+    #[clap(long)]
+    git: Option<Vec<String>>,
+
+    /// Run ripgrep command
+    #[clap(long)]
+    rg: Option<Vec<String>>,
 }
 
 fn main() -> Result<()> {
@@ -162,6 +170,12 @@ fn main() -> Result<()> {
         }
 
         edit_note(&note)?;
+    } else if let Some(commands) = &cli.git {
+        std::env::set_current_dir(notes_dir())?;
+        Command::new("git").args(commands).status()?;
+    } else if let Some(commands) = &cli.rg {
+        std::env::set_current_dir(notes_dir())?;
+        Command::new("rg").args(commands).status()?;
     } else {
         let mut notes = all_notes()?;
 
