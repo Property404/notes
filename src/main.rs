@@ -199,6 +199,11 @@ fn main() -> Result<()> {
                 break;
             }
 
+            if option_lowercase == "l" || option_lowercase == "last" {
+                edit_note(&notes[notes.len() - 1])?;
+                break;
+            }
+
             if let Some(regex) = option.strip_prefix('/') {
                 let regex = Regex::new(regex)?;
                 let matches: Vec<_> = notes.iter().filter(|v| regex.is_match(&v.name)).collect();
