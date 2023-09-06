@@ -160,6 +160,10 @@ struct Cli {
     #[clap(long, allow_hyphen_values=true, num_args = 1..)]
     rg: Option<Vec<String>>,
 
+    /// Execute a command in the notes directory
+    #[clap(long, allow_hyphen_values=true, num_args = 1..)]
+    exec: Option<Vec<String>>,
+
     /// Show working directory
     #[clap(long)]
     pwd: bool,
@@ -210,6 +214,9 @@ fn main() -> Result<()> {
     } else if let Some(commands) = &cli.rg {
         std::env::set_current_dir(notes_dir())?;
         Command::new("rg").args(commands).status()?;
+    } else if let Some(commands) = &cli.exec {
+        std::env::set_current_dir(notes_dir())?;
+        Command::new(&commands[0]).args(&commands[1..]).status()?;
     } else if cli.pwd {
         println!("{}", notes_dir().display());
     } else if cli.list {
