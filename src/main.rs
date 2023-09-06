@@ -1,5 +1,5 @@
 use anyhow::{anyhow, bail, Result};
-use clap::Parser;
+use clap::{Parser, ValueEnum};
 use regex::Regex;
 use std::{
     cmp::Ordering,
@@ -47,7 +47,7 @@ impl Note {
     }
 }
 
-fn all_notes() -> Result<Vec<Note>> {
+fn all_notes(sort_by: SortBy) -> Result<Vec<Note>> {
     let mut notes = Vec::new();
     let matcher = |entry: &DirEntry| {
         let file_name = entry.file_name().to_str();
@@ -64,6 +64,21 @@ fn all_notes() -> Result<Vec<Note>> {
             }
         }
     }
+
+    // Sort by access time
+    match sort_by {
+        SortBy::None => {}
+        SortBy::Alphabetical => {
+            notes.sort_unstable_by(|a, b| a.name.partial_cmp(&b.name).unwrap_or(Ordering::Equal))
+        }
+        SortBy::LastAccess => notes.sort_unstable_by(|a, b| {
+            a.metadata()
+                .map(|m| m.atime())
+                .unwrap_or_default()
+                .partial_cmp(&b.metadata().map(|m| m.atime()).unwrap_or_default())
+                .unwrap_or(Ordering::Equal)
+        }),
+    };
 
     Ok(notes)
 }
@@ -127,6 +142,13 @@ fn edit_note(note: &Note) -> Result<()> {
     Ok(())
 }
 
+#[derive(PartialEq, Copy, Clone, ValueEnum)]
+enum SortBy {
+    LastAccess,
+    Alphabetical,
+    None,
+}
+
 #[derive(Parser)]
 #[command(author, about, long_about = None)]
 struct Cli {
@@ -145,6 +167,10 @@ struct Cli {
     /// List notes
     #[clap(long)]
     list: bool,
+
+    /// Set sorting method
+    #[clap(long)]
+    sort: Option<SortBy>,
 
     /// A note to view or edit
     note: Option<String>,
@@ -187,20 +213,11 @@ fn main() -> Result<()> {
     } else if cli.pwd {
         println!("{}", notes_dir().display());
     } else if cli.list {
-        for note in all_notes()? {
+        for note in all_notes(cli.sort.unwrap_or(SortBy::Alphabetical))? {
             println!("{}", note.name);
         }
     } else {
-        let mut notes = all_notes()?;
-
-        // Sort by access time
-        notes.sort_unstable_by(|a, b| {
-            a.metadata()
-                .map(|m| m.atime())
-                .unwrap_or_default()
-                .partial_cmp(&b.metadata().map(|m| m.atime()).unwrap_or_default())
-                .unwrap_or(Ordering::Equal)
-        });
+        let notes = all_notes(cli.sort.unwrap_or(SortBy::LastAccess))?;
 
         if notes.is_empty() {
             println!("Could not find any notes");
