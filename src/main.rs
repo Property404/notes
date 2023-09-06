@@ -153,20 +153,20 @@ enum SortBy {
 #[command(author, about, long_about = None)]
 struct Cli {
     /// Execute git command
-    #[clap(long, allow_hyphen_values=true, num_args = 1..)]
+    #[clap(long, allow_hyphen_values=true, num_args = 1..,value_name="ARGS")]
     git: Option<Vec<String>>,
 
     /// Execute ripgrep command
-    #[clap(long, allow_hyphen_values=true, num_args = 1..)]
+    #[clap(long, allow_hyphen_values=true, num_args = 1..,value_name="ARGS")]
     rg: Option<Vec<String>>,
 
     /// Execute a command in the notes directory
-    #[clap(long, allow_hyphen_values=true, num_args = 1..)]
+    #[clap(long, allow_hyphen_values=true, num_args = 1..,value_name="ARGS")]
     exec: Option<Vec<String>>,
 
-    /// Show working directory
-    #[clap(long)]
-    pwd: bool,
+    /// Get directory of note
+    #[clap(long, value_name = "NOTE")]
+    dir: Option<Option<String>>,
 
     /// List notes
     #[clap(long)]
@@ -217,8 +217,16 @@ fn main() -> Result<()> {
     } else if let Some(commands) = &cli.exec {
         std::env::set_current_dir(notes_dir())?;
         Command::new(&commands[0]).args(&commands[1..]).status()?;
-    } else if cli.pwd {
-        println!("{}", notes_dir().display());
+    } else if let Some(note) = &cli.dir {
+        if let Some(note) = note {
+            let note = Note::new(note);
+            if !note.path.exists() {
+                bail!("No note named '{}'", note.name);
+            }
+            println!("{}", note.path.display());
+        } else {
+            println!("{}", notes_dir().display());
+        }
     } else if cli.list {
         for note in all_notes(cli.sort_by.unwrap_or(SortBy::Alphabetical))? {
             println!("{}", note.name);
