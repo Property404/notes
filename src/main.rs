@@ -142,6 +142,10 @@ struct Cli {
     #[clap(long)]
     pwd: bool,
 
+    /// List notes
+    #[clap(long)]
+    list: bool,
+
     /// A note to view or edit
     note: Option<String>,
 }
@@ -182,6 +186,10 @@ fn main() -> Result<()> {
         Command::new("rg").args(commands).status()?;
     } else if cli.pwd {
         println!("{}", notes_dir().display());
+    } else if cli.list {
+        for note in all_notes()? {
+            println!("{}", note.name);
+        }
     } else {
         let mut notes = all_notes()?;
 
