@@ -2,7 +2,6 @@ use anyhow::{anyhow, bail, Result};
 use clap::{Parser, ValueEnum};
 use regex::Regex;
 use std::{
-    cmp::Ordering,
     env,
     fs::{self, Metadata},
     io::{self, Write},
@@ -68,15 +67,12 @@ fn all_notes(sort_by: SortBy) -> Result<Vec<Note>> {
     // Sort by access time
     match sort_by {
         SortBy::None => {}
-        SortBy::Alphabetical => {
-            notes.sort_unstable_by(|a, b| a.name.partial_cmp(&b.name).unwrap_or(Ordering::Equal))
-        }
+        SortBy::Alphabetical => notes.sort_unstable_by(|a, b| a.name.cmp(&b.name)),
         SortBy::LastAccess => notes.sort_unstable_by(|a, b| {
             a.metadata()
                 .map(|m| m.atime())
                 .unwrap_or_default()
-                .partial_cmp(&b.metadata().map(|m| m.atime()).unwrap_or_default())
-                .unwrap_or(Ordering::Equal)
+                .cmp(&b.metadata().map(|m| m.atime()).unwrap_or_default())
         }),
     };
 
