@@ -130,16 +130,20 @@ fn edit_note(note: &Note) -> Result<()> {
 #[derive(Parser)]
 #[command(author, about, long_about = None)]
 struct Cli {
-    /// A note to view or edit
-    note: Option<String>,
-
-    /// Run git command
-    #[clap(long)]
+    /// Execute git command
+    #[clap(long, allow_hyphen_values=true, num_args = 1..)]
     git: Option<Vec<String>>,
 
-    /// Run ripgrep command
-    #[clap(long)]
+    /// Execute ripgrep command
+    #[clap(long, allow_hyphen_values=true, num_args = 1..)]
     rg: Option<Vec<String>>,
+
+    /// Show working directory
+    #[clap(long)]
+    pwd: bool,
+
+    /// A note to view or edit
+    note: Option<String>,
 }
 
 fn main() -> Result<()> {
@@ -176,6 +180,8 @@ fn main() -> Result<()> {
     } else if let Some(commands) = &cli.rg {
         std::env::set_current_dir(notes_dir())?;
         Command::new("rg").args(commands).status()?;
+    } else if cli.pwd {
+        println!("{}", notes_dir().display());
     } else {
         let mut notes = all_notes()?;
 
