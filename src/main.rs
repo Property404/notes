@@ -174,7 +174,7 @@ struct Cli {
 
     /// Set sorting method
     #[clap(long)]
-    sort: Option<SortBy>,
+    sort_by: Option<SortBy>,
 
     /// A note to view or edit
     note: Option<String>,
@@ -220,11 +220,11 @@ fn main() -> Result<()> {
     } else if cli.pwd {
         println!("{}", notes_dir().display());
     } else if cli.list {
-        for note in all_notes(cli.sort.unwrap_or(SortBy::Alphabetical))? {
+        for note in all_notes(cli.sort_by.unwrap_or(SortBy::Alphabetical))? {
             println!("{}", note.name);
         }
     } else {
-        let notes = all_notes(cli.sort.unwrap_or(SortBy::LastAccess))?;
+        let notes = all_notes(cli.sort_by.unwrap_or(SortBy::LastAccess))?;
 
         if notes.is_empty() {
             println!("Could not find any notes");
