@@ -8,24 +8,18 @@ use std::{
     path::PathBuf,
 };
 
-const OUT_DIR_VAR: &str = "OUT_DIR";
 const BASH_COMPLETIONS_DIR_VAR: &str = "BASH_COMPLETIONS_DIR";
 const OUT_FILE_NAME: &str = "dev_dagans_notes_completion.bash";
-const FOOTER_FILE_NAME: &str = "scripts/bash_completion_footer.bash";
+const FOOTER_FILE_PATH: &str = "scripts/bash_completion_footer.bash";
 
 include!("src/cli.rs");
 
 fn main() -> Result<()> {
-    println!("cargo:rerun-if-changed={FOOTER_FILE_NAME}");
-    println!("cargo:rerun-if-env-changed={OUT_DIR_VAR}");
+    println!("cargo:rerun-if-changed={FOOTER_FILE_PATH}");
     println!("cargo:rerun-if-env-changed={BASH_COMPLETIONS_DIR_VAR}");
 
     let root = PathBuf::from(env!("CARGO_MANIFEST_DIR"));
-    let out_file = PathBuf::from(match env::var_os(OUT_DIR_VAR) {
-        None => panic!("${OUT_DIR_VAR} not defined!"),
-        Some(out_dir) => out_dir,
-    })
-    .join(OUT_FILE_NAME);
+    let out_file = root.join("generated").join(OUT_FILE_NAME);
 
     // Construct original clap_complete script
     let mut cmd = Cli::command();
@@ -45,7 +39,7 @@ fn main() -> Result<()> {
     let mut script = script.join("\n");
 
     // Add footer
-    let footer = fs::read_to_string(root.join(FOOTER_FILE_NAME))?;
+    let footer = fs::read_to_string(root.join(FOOTER_FILE_PATH))?;
     script.push_str(&footer);
 
     // Finish up
