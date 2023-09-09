@@ -1,0 +1,17 @@
+---
+name: Bash linting
+
+# yamllint disable-line rule:truthy
+on: [push, pull_request]
+
+jobs:
+  build:
+
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v2
+      - name: Install shellcheck
+        run: sudo apt install shellcheck
+      - name: Lint bash files
+        run: shellcheck -- scripts/*.bash
