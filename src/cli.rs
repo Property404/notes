@@ -35,6 +35,6 @@ pub struct Cli {
     pub sort_by: Option<SortBy>,
 
     /// A note to view or edit
-    #[clap(long, value_hint = ValueHint::Unknown)]
+    #[clap(value_hint = ValueHint::Unknown)]
     pub note: Option<String>,
 }
