@@ -1,5 +1,6 @@
 use anyhow::{anyhow, bail, Result};
-use clap::{Parser, ValueEnum};
+use clap::Parser;
+use notes::cli::{Cli, SortBy};
 use regex::Regex;
 use std::{
     env,
@@ -136,44 +137,6 @@ fn edit_note(note: &Note) -> Result<()> {
             .output()?;
     }
     Ok(())
-}
-
-#[derive(PartialEq, Copy, Clone, ValueEnum)]
-enum SortBy {
-    LastAccess,
-    Alphabetical,
-    None,
-}
-
-#[derive(Parser)]
-#[command(author, about, long_about = None)]
-struct Cli {
-    /// Execute git command
-    #[clap(long, allow_hyphen_values=true, num_args = 1..,value_name="ARGS")]
-    git: Option<Vec<String>>,
-
-    /// Execute ripgrep command
-    #[clap(long, allow_hyphen_values=true, num_args = 1..,value_name="ARGS")]
-    rg: Option<Vec<String>>,
-
-    /// Execute a command in the notes directory
-    #[clap(long, allow_hyphen_values=true, num_args = 1..,value_name="ARGS")]
-    exec: Option<Vec<String>>,
-
-    /// Get directory of note
-    #[clap(long, value_name = "NOTE")]
-    dir: Option<Option<String>>,
-
-    /// List notes
-    #[clap(long)]
-    list: bool,
-
-    /// Set sorting method
-    #[clap(long)]
-    sort_by: Option<SortBy>,
-
-    /// A note to view or edit
-    note: Option<String>,
 }
 
 fn main() -> Result<()> {
