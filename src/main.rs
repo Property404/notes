@@ -6,7 +6,6 @@ use rustyline::{error::ReadlineError, DefaultEditor};
 use std::{
     env,
     fs::{self, Metadata},
-    io::{self, Write},
     os::unix::fs::MetadataExt,
     path::{Path, PathBuf},
     process::{Command, ExitCode},
@@ -148,14 +147,18 @@ fn main() -> Result<ExitCode> {
 
         if !note.path.exists() {
             println!("Note '{}' doesn't exist.", &note.name);
-            print!("Would you like to create it(y/n)?");
-            io::stdout().flush()?;
 
-            let mut option = String::new();
+            let mut rleditor = DefaultEditor::new()?;
             loop {
-                io::stdin()
-                    .read_line(&mut option)
-                    .expect("Failed to read from stdin");
+                let option = match rleditor.readline("Would you like to create it(y/n)?") {
+                    Ok(option) => option,
+                    Err(ReadlineError::Interrupted) => {
+                        return Ok(ExitCode::FAILURE);
+                    }
+                    Err(err) => {
+                        return Err(err.into());
+                    }
+                };
                 let option = option.to_lowercase();
                 let option = option.trim();
 
