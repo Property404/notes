@@ -2,13 +2,14 @@ use anyhow::{anyhow, bail, Result};
 use clap::Parser;
 use notes::cli::{Cli, SortBy};
 use regex::Regex;
+use rustyline::{error::ReadlineError, DefaultEditor};
 use std::{
     env,
     fs::{self, Metadata},
     io::{self, Write},
     os::unix::fs::MetadataExt,
     path::{Path, PathBuf},
-    process::Command,
+    process::{Command, ExitCode},
     sync::OnceLock,
 };
 use walkdir::{DirEntry, WalkDir};
@@ -139,7 +140,7 @@ fn edit_note(note: &Note) -> Result<()> {
     Ok(())
 }
 
-fn main() -> Result<()> {
+fn main() -> Result<ExitCode> {
     let cli = Cli::parse();
 
     if let Some(note) = &cli.note {
@@ -161,7 +162,7 @@ fn main() -> Result<()> {
                 if option.starts_with('y') {
                     break;
                 } else if option.starts_with('n') {
-                    return Ok(());
+                    return Ok(ExitCode::SUCCESS);
                 }
             }
         }
@@ -195,7 +196,7 @@ fn main() -> Result<()> {
 
         if notes.is_empty() {
             println!("Could not find any notes");
-            return Ok(());
+            return Ok(ExitCode::SUCCESS);
         }
 
         println!("Found the following:");
@@ -205,13 +206,19 @@ fn main() -> Result<()> {
             println!("{index}. {note}");
         }
 
+        let mut rleditor = DefaultEditor::new()?;
         loop {
-            print!("Select> ");
-
-            let mut option = String::new();
-            io::stdout().flush()?;
-            io::stdin().read_line(&mut option)?;
+            let option = match rleditor.readline("Select> ") {
+                Ok(option) => option,
+                Err(ReadlineError::Interrupted) => {
+                    return Ok(ExitCode::FAILURE);
+                }
+                Err(err) => {
+                    return Err(err.into());
+                }
+            };
             let option = option.trim();
+
             let option_lowercase = option.to_lowercase();
 
             if option_lowercase == "q" || option_lowercase == "quit" {
@@ -245,5 +252,5 @@ fn main() -> Result<()> {
         }
     }
 
-    Ok(())
+    Ok(ExitCode::SUCCESS)
 }
