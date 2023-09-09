@@ -16,6 +16,7 @@ const FOOTER_FILE_NAME: &str = "scripts/bash_completion_footer.bash";
 include!("src/cli.rs");
 
 fn main() -> Result<()> {
+    println!("cargo:rerun-if-changed={FOOTER_FILE_NAME}");
     println!("cargo:rerun-if-env-changed={OUT_DIR_VAR}");
     println!("cargo:rerun-if-env-changed={BASH_COMPLETIONS_DIR_VAR}");
 
