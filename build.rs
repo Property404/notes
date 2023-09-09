@@ -29,7 +29,10 @@ fn main() -> Result<()> {
     let script = String::from_utf8(script.into_inner()?)?;
 
     // Strip invocation, because we will write our own
-    let mut script: Vec<_> = script.lines().collect();
+    let mut script: Vec<_> = ["#!/usr/bin/env bash"]
+        .into_iter()
+        .chain(script.lines())
+        .collect();
     assert!(script
         .last()
         .expect("Bug: Script empty")
