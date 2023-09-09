@@ -91,8 +91,18 @@ fn notes_dir() -> &'static Path {
                 env::set_current_dir(&path).expect("Failed to change directory");
                 Command::new("git")
                     .arg("init")
-                    .status()
+                    .output()
                     .expect("Git initialization failed");
+                let gitignore = ["*", "!notes", "!*.md", "!.gitignore", ""];
+                fs::write(".gitignore", gitignore.join("\n")).expect("Failed to write .gitignore");
+                Command::new("git")
+                    .args(["add", "."])
+                    .output()
+                    .expect("Git failed to add files");
+                Command::new("git")
+                    .args(["commit", "-m", "Initial commit"])
+                    .output()
+                    .expect("Initial commit failed");
             }
             let path = path.join("notes");
             fs::create_dir_all(&path).expect("Could not create notes directory!");
