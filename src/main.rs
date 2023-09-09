@@ -1,6 +1,9 @@
 use anyhow::{anyhow, bail, Result};
 use clap::Parser;
-use notes::cli::{Cli, SortBy};
+use notes::{
+    cli::{Cli, SortBy},
+    manifest::Manifest,
+};
 use regex::Regex;
 use rustyline::{error::ReadlineError, DefaultEditor};
 use std::{
@@ -80,30 +83,40 @@ fn all_notes(sort_by: SortBy) -> Result<Vec<Note>> {
     Ok(notes)
 }
 
+fn init_notes_repo(path: &Path) -> Result<()> {
+    // Create git repo
+    fs::create_dir_all(path)?;
+    env::set_current_dir(path)?;
+    Command::new("git").arg("init").output()?;
+
+    // Create .gitignore
+    let gitignore = ["*", "!notes", "!*.md", "!.gitignore", ""];
+    fs::write(".gitignore", gitignore.join("\n"))?;
+
+    // Create manifest
+    fs::write("manifest.toml", toml::to_string(&Manifest::new()?)?)?;
+
+    // First commit
+    Command::new("git").args(["add", "."]).output()?;
+    Command::new("git")
+        .args(["commit", "-m", "Initial commit"])
+        .output()?;
+
+    Ok(())
+}
+
 fn notes_dir() -> &'static Path {
     static NOTES_DIR: OnceLock<PathBuf> = OnceLock::new();
     NOTES_DIR
         .get_or_init(|| {
             let path = Path::new(&env::var("HOME").expect("$HOME not set"))
                 .join(".local/share/dev.dagans.notes");
+
             if !path.join(".git").exists() {
-                fs::create_dir_all(&path).expect("Could not create notes directory!");
-                env::set_current_dir(&path).expect("Failed to change directory");
-                Command::new("git")
-                    .arg("init")
-                    .output()
-                    .expect("Git initialization failed");
-                let gitignore = ["*", "!notes", "!*.md", "!.gitignore", ""];
-                fs::write(".gitignore", gitignore.join("\n")).expect("Failed to write .gitignore");
-                Command::new("git")
-                    .args(["add", "."])
-                    .output()
-                    .expect("Git failed to add files");
-                Command::new("git")
-                    .args(["commit", "-m", "Initial commit"])
-                    .output()
-                    .expect("Initial commit failed");
+                init_notes_repo(&path)
+                    .unwrap_or_else(|e| panic!("Could not create notes repo: {e}"));
             }
+
             let path = path.join("notes");
             fs::create_dir_all(&path).expect("Could not create notes directory!");
             env::set_current_dir(&path).expect("Failed to change directory");
