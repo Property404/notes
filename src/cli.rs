@@ -1,4 +1,4 @@
-use clap::{Parser, ValueEnum};
+use clap::{Parser, ValueEnum, ValueHint};
 
 #[derive(PartialEq, Copy, Clone, ValueEnum)]
 pub enum SortBy {
@@ -35,5 +35,6 @@ pub struct Cli {
     pub sort_by: Option<SortBy>,
 
     /// A note to view or edit
+    #[clap(long, value_hint = ValueHint::Unknown)]
     pub note: Option<String>,
 }
