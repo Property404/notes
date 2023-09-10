@@ -2,6 +2,7 @@ use anyhow::{anyhow, bail, Result};
 use clap::Parser;
 use notes::{
     cli::{Cli, SortBy},
+    config::Config,
     manifest::Manifest,
 };
 use regex::Regex;
@@ -109,8 +110,8 @@ fn notes_dir() -> &'static Path {
     static NOTES_DIR: OnceLock<PathBuf> = OnceLock::new();
     NOTES_DIR
         .get_or_init(|| {
-            let path = Path::new(&env::var("HOME").expect("$HOME not set"))
-                .join(".local/share/dev.dagans.notes");
+            let config = Config::load().expect("Failed to load config");
+            let path = config.repo_path;
 
             if !path.join(".git").exists() {
                 init_notes_repo(&path)
