@@ -72,7 +72,7 @@ fn all_notes(sort_by: SortBy) -> Result<Vec<Note>> {
     match sort_by {
         SortBy::None => {}
         SortBy::Alphabetical => notes.sort_unstable_by(|a, b| a.name.cmp(&b.name)),
-        SortBy::LastAccess => notes.sort_unstable_by(|a, b| {
+        SortBy::AccessTime => notes.sort_unstable_by(|a, b| {
             a.metadata()
                 .map(|m| m.atime())
                 .unwrap_or_default()
@@ -235,7 +235,7 @@ fn main() -> Result<ExitCode> {
             println!("{}", note.name);
         }
     } else {
-        let notes = all_notes(cli.sort_by.unwrap_or(SortBy::LastAccess))?;
+        let notes = all_notes(cli.sort_by.unwrap_or(SortBy::AccessTime))?;
 
         if notes.is_empty() {
             println!("Could not find any notes");

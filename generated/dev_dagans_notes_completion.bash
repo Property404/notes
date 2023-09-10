@@ -43,7 +43,7 @@ _notes() {
                     return 0
                     ;;
                 --sort-by)
-                    COMPREPLY=($(compgen -W "last-access alphabetical none" -- "${cur}"))
+                    COMPREPLY=($(compgen -W "access-time alphabetical none" -- "${cur}"))
                     return 0
                     ;;
                 *)

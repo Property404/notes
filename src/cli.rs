@@ -1,9 +1,13 @@
 use clap::{Parser, ValueEnum, ValueHint};
 
+/// The sorting method used when retrieving a list of notes.
 #[derive(PartialEq, Copy, Clone, ValueEnum)]
 pub enum SortBy {
-    LastAccess,
+    /// Sort by access time, oldest access first.
+    AccessTime,
+    /// Sort alphabetically, from 'A' to 'Z'.
     Alphabetical,
+    /// Do not sort.
     None,
 }
 
