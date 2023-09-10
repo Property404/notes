@@ -139,10 +139,7 @@ fn edit_note(note: &Note) -> Result<()> {
 
     let previously_existed = note.path.exists();
 
-    Command::new(editor)
-        .args(&**args)
-        .arg(&note.path)
-        .status()?;
+    Command::new(editor).args(args).arg(&note.path).status()?;
 
     if note.path.exists() {
         Command::new("git").arg("add").arg(&note.path).output()?;
@@ -181,8 +178,8 @@ fn main() -> Result<ExitCode> {
                     Err(err) => {
                         return Err(err.into());
                     }
-                };
-                let option = option.to_lowercase();
+                }
+                .to_lowercase();
                 let option = option.trim();
 
                 if option.starts_with('y') {
