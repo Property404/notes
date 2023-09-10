@@ -191,15 +191,35 @@ fn main() -> Result<ExitCode> {
         }
 
         edit_note(&note)?;
-    } else if let Some(commands) = &cli.git {
+    } else if let Some(args) = &cli.git {
         std::env::set_current_dir(notes_dir())?;
-        Command::new("git").args(commands).status()?;
-    } else if let Some(commands) = &cli.rg {
+        Command::new("git").args(args).status()?;
+    } else if let Some(args) = &cli.rg {
         std::env::set_current_dir(notes_dir())?;
-        Command::new("rg").args(commands).status()?;
-    } else if let Some(commands) = &cli.exec {
+        Command::new("rg").args(args).status()?;
+    } else if let Some(args) = &cli.exec {
         std::env::set_current_dir(notes_dir())?;
-        Command::new(&commands[0]).args(&commands[1..]).status()?;
+        let mut args = args.iter();
+        let command = args
+            .next()
+            .expect("Bug: No args(should have been caught by Clap)");
+
+        let mut expanded_args = Vec::new();
+        let sort_by = cli.sort_by.unwrap_or(SortBy::None);
+        let notes: Vec<String> = all_notes(sort_by)?
+            .into_iter()
+            .map(|note| format!("{}.md", note.name))
+            .collect();
+
+        for arg in args {
+            if arg == "{}" {
+                expanded_args.extend(&notes);
+            } else {
+                expanded_args.push(arg);
+            }
+        }
+
+        Command::new(command).args(&expanded_args).status()?;
     } else if let Some(note) = &cli.dir {
         if let Some(note) = note {
             let note = Note::new(note);

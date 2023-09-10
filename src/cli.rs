@@ -18,7 +18,8 @@ pub struct Cli {
     #[clap(long, allow_hyphen_values=true, num_args = 1..,value_name="ARGS")]
     pub rg: Option<Vec<String>>,
 
-    /// Execute a command in the notes directory
+    /// Execute a command in the notes directory. `{}` will be expanded to all note files as a
+    /// separate arg
     #[clap(long, allow_hyphen_values=true, num_args = 1..,value_name="ARGS")]
     pub exec: Option<Vec<String>>,
 
