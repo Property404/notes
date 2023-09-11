@@ -12,7 +12,7 @@ pub enum SortBy {
 }
 
 #[derive(Parser)]
-#[command(author, about, long_about = None)]
+#[command(author, about, long_about = None, version)]
 pub struct Cli {
     /// Execute git command
     #[clap(long, allow_hyphen_values=true, num_args = 1..,value_name="ARGS")]
