@@ -39,6 +39,10 @@ pub struct Cli {
     #[clap(long)]
     pub sort_by: Option<SortBy>,
 
+    /// Remove note
+    #[clap(long, value_name = "NOTE", alias = "rm")]
+    pub remove: Option<String>,
+
     /// A note to view or edit
     #[clap(value_hint = ValueHint::Unknown)]
     pub note: Option<String>,

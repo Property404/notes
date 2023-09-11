@@ -160,6 +160,17 @@ fn edit_note(note: &Note) -> Result<()> {
     Ok(())
 }
 
+fn remove_note(note: &Note) -> Result<()> {
+    if !note.path.exists() {
+        bail!("No such note: {}", note.name);
+    }
+    Command::new("git").arg("rm").arg(&note.path).output()?;
+    Command::new("git")
+        .args(["commit", "-m", &format!("removed] {}", note.name)])
+        .output()?;
+    Ok(())
+}
+
 fn main() -> Result<ExitCode> {
     let cli = Cli::parse();
 
@@ -235,6 +246,9 @@ fn main() -> Result<ExitCode> {
         for note in all_notes(cli.sort_by.unwrap_or(SortBy::Alphabetical))? {
             println!("{}", note.name);
         }
+    } else if let Some(note) = cli.remove {
+        let note = Note::new(note);
+        remove_note(&note)?;
     } else {
         let notes = all_notes(cli.sort_by.unwrap_or(SortBy::AccessTime))?;
 
