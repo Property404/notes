@@ -27,9 +27,9 @@ pub struct Cli {
     #[clap(long, allow_hyphen_values=true, num_args = 1..,value_name="ARGS", group="main")]
     pub exec: Option<Vec<String>>,
 
-    /// Get directory of note
+    /// Get path of note, or path of notes directory if blank
     #[clap(long, value_name = "NOTE", group = "main")]
-    pub dir: Option<Option<String>>,
+    pub path: Option<Option<String>>,
 
     /// List notes
     #[clap(long, group = "main")]

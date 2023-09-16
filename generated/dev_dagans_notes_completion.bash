@@ -20,7 +20,7 @@ _notes() {
 
     case "${cmd}" in
         notes)
-            opts="-h -V --git --rg --exec --dir --list --sort-by --remove --help --version [NOTE]"
+            opts="-h -V --git --rg --exec --path --list --sort-by --remove --help --version [NOTE]"
             if [[ ${cur} == -* || ${COMP_CWORD} -eq 1 ]] ; then
                 COMPREPLY=( $(compgen -W "${opts}" -- "${cur}") )
                 return 0
@@ -38,7 +38,7 @@ _notes() {
                     COMPREPLY=($(compgen -f "${cur}"))
                     return 0
                     ;;
-                --dir)
+                --path)
                     COMPREPLY=($(compgen -f "${cur}"))
                     return 0
                     ;;

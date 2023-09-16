@@ -232,7 +232,7 @@ fn main() -> Result<ExitCode> {
         }
 
         Command::new(command).args(&expanded_args).status()?;
-    } else if let Some(note) = &cli.dir {
+    } else if let Some(note) = &cli.path {
         if let Some(note) = note {
             let note = Note::new(note);
             if !note.path.exists() {
