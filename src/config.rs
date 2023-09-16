@@ -21,6 +21,14 @@ pub struct Config {
     pub repo_path: PathBuf,
 }
 
+impl Default for Config {
+    fn default() -> Self {
+        Self {
+            repo_path: default_repo_path(),
+        }
+    }
+}
+
 impl Config {
     pub fn load() -> Result<Config> {
         let path = default_config_path();
@@ -29,7 +37,7 @@ impl Config {
                 bail!("Could not get parent of path");
             };
             fs::create_dir_all(parent)?;
-            fs::write(&path, "")?;
+            fs::write(&path, toml::to_string(&Config::default())?)?;
         }
         Ok(toml::from_str(&fs::read_to_string(&path)?)?)
     }
