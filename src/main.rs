@@ -95,7 +95,7 @@ fn init_notes_repo(path: &Path) -> Result<()> {
     fs::write(".gitignore", gitignore.join("\n"))?;
 
     // Create manifest
-    fs::write("manifest.toml", toml::to_string(&Manifest::new()?)?)?;
+    fs::write("manifest.json", serde_json::to_string(&Manifest::new()?)?)?;
 
     // First commit
     Command::new("git").args(["add", "."]).output()?;

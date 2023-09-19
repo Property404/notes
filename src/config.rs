@@ -7,7 +7,7 @@ use std::{
 
 fn default_config_path() -> PathBuf {
     Path::new(&env::var("HOME").expect("$HOME not set"))
-        .join(".config/dev.dagans.notes/config.toml")
+        .join(".config/dev.dagans.notes/config.json")
 }
 
 fn default_repo_path() -> PathBuf {
@@ -37,8 +37,8 @@ impl Config {
                 bail!("Could not get parent of path");
             };
             fs::create_dir_all(parent)?;
-            fs::write(&path, toml::to_string(&Config::default())?)?;
+            fs::write(&path, serde_json::to_string(&Config::default())?)?;
         }
-        Ok(toml::from_str(&fs::read_to_string(&path)?)?)
+        Ok(serde_json::from_str(&fs::read_to_string(&path)?)?)
     }
 }
