@@ -33,12 +33,7 @@ fn main() -> Result<()> {
         .into_iter()
         .chain(script.lines())
         .collect();
-    assert!(script
-        .last()
-        .expect("Bug: Script empty")
-        .starts_with("complete"));
-    script.pop();
-    script.push("");
+    script.push("\n");
     let mut script = script.join("\n");
 
     // Add footer

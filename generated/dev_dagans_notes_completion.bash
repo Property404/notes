@@ -60,6 +60,12 @@ _notes() {
     esac
 }
 
+if [[ "${BASH_VERSINFO[0]}" -eq 4 && "${BASH_VERSINFO[1]}" -ge 4 || "${BASH_VERSINFO[0]}" -gt 4 ]]; then
+    complete -F _notes -o nosort -o bashdefault -o default notes
+else
+    complete -F _notes -o bashdefault -o default notes
+fi
+
 #!/usr/bin/env bash
 _notes2() {
     _notes "$1" "$2" "$3"
