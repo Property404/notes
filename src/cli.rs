@@ -43,6 +43,10 @@ pub struct Cli {
     #[clap(long, value_name = "NOTE", alias = "rm", group = "main")]
     pub remove: Option<String>,
 
+    /// View note
+    #[clap(long, value_name = "NOTE", group = "main")]
+    pub view: Option<String>,
+
     /// A note to view or edit
     #[clap(value_hint = ValueHint::Unknown, group = "main")]
     pub note: Option<String>,

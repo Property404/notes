@@ -171,6 +171,16 @@ fn remove_note(note: &Note) -> Result<()> {
     Ok(())
 }
 
+fn view_note(note: &Note) -> Result<()> {
+    if !note.path.exists() {
+        bail!("No such note: {}", note.name);
+    }
+
+    print!("{}", fs::read_to_string(&note.path)?);
+
+    Ok(())
+}
+
 fn main() -> Result<ExitCode> {
     let cli = Cli::parse();
 
@@ -255,6 +265,9 @@ fn main() -> Result<ExitCode> {
     } else if let Some(note) = cli.remove {
         let note = Note::new(note);
         remove_note(&note)?;
+    } else if let Some(note) = cli.view {
+        let note = Note::new(note);
+        view_note(&note)?;
     } else {
         let notes = all_notes(cli.sort_by.unwrap_or(SortBy::AccessTime))?;
 
