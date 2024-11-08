@@ -18,9 +18,9 @@ pub struct Cli {
     #[clap(long, allow_hyphen_values=true, num_args = 1..,value_name="ARGS", group="main")]
     pub git: Option<Vec<String>>,
 
-    /// Execute ripgrep command
-    #[clap(long, allow_hyphen_values=true, num_args = 1..,value_name="ARGS", group="main")]
-    pub rg: Option<Vec<String>>,
+    /// Search notes (defaults to `rg`, falls back to `grep`)
+    #[clap(long, allow_hyphen_values=true, num_args = 1..,value_name="ARGS", group="main", alias="rg")]
+    pub search: Option<Vec<String>>,
 
     /// Execute a command in the notes directory. `{}` will be expanded to all note files as a
     /// separate arg

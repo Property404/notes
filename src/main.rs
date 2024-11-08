@@ -206,9 +206,15 @@ fn main() -> Result<ExitCode> {
     } else if let Some(args) = &cli.git {
         std::env::set_current_dir(notes_dir())?;
         Command::new("git").args(args).status()?;
-    } else if let Some(args) = &cli.rg {
+    } else if let Some(args) = &cli.search {
         std::env::set_current_dir(notes_dir())?;
-        Command::new("rg").args(args).status()?;
+        Command::new("rg").args(args).status().or_else(|_| {
+            Command::new("grep")
+                .arg("-r")
+                .arg("--color=auto")
+                .args(args)
+                .status()
+        })?;
     } else if let Some(args) = &cli.exec {
         std::env::set_current_dir(notes_dir())?;
         let mut args = args.iter();
